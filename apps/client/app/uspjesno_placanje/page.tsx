@@ -75,8 +75,36 @@ export default function UspjesnoPlacanjePage() {
             // 3. Resetuj korpu na frontendu
             resetKorpa();
 
-            // 4. Email sending would need to be implemented as a separate Server Action
-            // For now, we'll show success message
+
+            // 4. Slanje email potvrde o plaćanju
+            if (session?.user?.email) {
+              // Pokušaj da izvučeš ime i prezime iz session.user ili koristi name
+              // (prilagodi prema svojoj NextAuth konfiguraciji ako imaš custom polja)
+              const ime = (session.user as any).ime || (session.user as any).name?.split(' ')[0] || '';
+              const prezime = (session.user as any).prezime || (session.user as any).name?.split(' ')[1] || '';
+              try {
+                const emailRes = await fetch('/api/proizvodi/email/posalji', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    email: session.user.email,
+                    subject: '✅ Vaše plaćanje je uspješno!',
+                    html: `
+                      <h2>✅ Vaše plaćanje je uspješno!</h2>
+                      <p><b>Ime:</b> ${ime}</p>
+                      <p><b>Prezime:</b> ${prezime}</p>
+                      <p><b>Email:</b> ${session.user.email}</p>
+                    `
+                  })
+                });
+                if (!emailRes.ok) {
+                  setEmailError('Nije moguće poslati email potvrdu.');
+                }
+              } catch (err) {
+                setEmailError('Greška pri slanju email potvrde.');
+              }
+            }
+
             toast.success('Plaćanje je uspešno obrađeno!', { duration: 3000 });
 
             setIsLoading(false);

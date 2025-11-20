@@ -111,6 +111,31 @@ export default function KorpaActions({ userId, stavke, onUpdate }: KorpaActionsP
         // Create order
         const success = await potvrdiPorudzbinu();
         if (success) {
+          // Pokušaj da pošalješ email potvrdu korisniku
+          try {
+            // Pretpostavljamo da korisnik ima podatke u localStorage-u ili iz session-a
+            const userEmail = localStorage.getItem('userEmail');
+            const userIme = localStorage.getItem('userIme');
+            const userPrezime = localStorage.getItem('userPrezime');
+            if (userEmail) {
+              await fetch('/api/proizvodi/email/posalji', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  email: userEmail,
+                  subject: '✅ Vaša porudžbina je uspešno kreirana!',
+                  html: `
+                    <h2>✅ Vaša porudžbina je uspešno kreirana!</h2>
+                    <p><b>Ime:</b> ${userIme || ''}</p>
+                    <p><b>Prezime:</b> ${userPrezime || ''}</p>
+                    <p><b>Email:</b> ${userEmail}</p>
+                  `
+                })
+              });
+            }
+          } catch (err) {
+            toast.error('Greška pri slanju email potvrde.');
+          }
           toast.success('Potvrda porudžbine je poslata na email!', { duration: 4000 });
           router.push('/');
         }
