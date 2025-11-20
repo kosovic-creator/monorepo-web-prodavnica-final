@@ -1,5 +1,5 @@
 'use client';
-import { SessionProvider, useSession } from "next-auth/react";
+import { useSession } from "next-auth/react";
 import '../../i18n/config';
 // import { useEffect } from "react";
 // import { useRouter } from "next/navigation";
@@ -16,13 +16,14 @@ function ClentNavbarWithSession({ setSidebarOpen }: { setSidebarOpen: (open: boo
   return <ClientNavbar setSidebarOpen={setSidebarOpen} />;
 }
 
+
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   return (
-    <SessionProvider>
+    <>
       <ClentNavbarWithSession setSidebarOpen={setSidebarOpen} />
       <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       {children}
-    </SessionProvider>
+    </>
   );
 }

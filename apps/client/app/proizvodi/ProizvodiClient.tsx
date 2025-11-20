@@ -10,11 +10,13 @@ import OmiljeniButton from './components/OmiljeniButton';
 import AddToCartButton from './components/AddToCartButton';
 import PaginationControls from './components/PaginationControls';
 import SearchInfo from './components/SearchInfo';
-// import ProizvodiSkeleton from '@/components/ProizvodiSkeleton';
+import ProizvodiSkeleton from './components/ProizvodiSkeleton';
+import { useState } from 'react';
 
 export default function ProizvodiClient({ proizvodi, total, page, pageSize, lang, search }: any) {
   const { t } = useTranslation('proizvodi', { lng: lang });
   const searchParams = useSearchParams();
+  const [loading, setLoading] = useState(false);
 
 
   return (
@@ -50,7 +52,7 @@ export default function ProizvodiClient({ proizvodi, total, page, pageSize, lang
 
                    <div className="absolute top-3 right-3 z-10">
                     <OmiljeniButton proizvodId={proizvod.id} />
-                  </div> 
+                  </div>
 
                   <div className="mb-3 flex justify-center">
                     <Image

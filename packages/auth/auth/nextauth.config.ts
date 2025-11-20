@@ -6,6 +6,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 
 import * as bcrypt from "bcryptjs";
 import { z } from "zod";
+
 import { PrismaClient } from "@prisma/client";
 import type { CustomUser, CustomToken, CustomSessionUser } from "../types/nextauth-custom";
 
