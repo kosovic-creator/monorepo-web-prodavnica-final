@@ -1,0 +1,13 @@
+# Ignore TurboRepo
+.turbo/
+node_modules
+.next
+out
+dist
+.env*
+.DS_Store
+.vercel
+
+/generated/prisma
+*.tar.zst
+*.pack
