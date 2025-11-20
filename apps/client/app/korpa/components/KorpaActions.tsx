@@ -1,6 +1,7 @@
 'use client';
 
 import { useTransition } from 'react';
+import { useSession } from 'next-auth/react';
 import { useTranslation } from 'react-i18next';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
@@ -34,6 +35,7 @@ export default function KorpaActions({ userId, stavke, onUpdate }: KorpaActionsP
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
   const { resetKorpa } = useKorpa();
+  const { data: session } = useSession();
 
   const ukupno = stavke.reduce((acc, s) => acc + (s.proizvod ? s.proizvod.cena * s.kolicina : 0), 0);
 
@@ -95,10 +97,12 @@ export default function KorpaActions({ userId, stavke, onUpdate }: KorpaActionsP
   };
 
   const handleZavrsiKupovinu = async () => {
+    console.log('[DEBUG] handleZavrsiKupovinu called');
     startTransition(async () => {
       try {
         // Check delivery data
         const podaciResult = await getPodaciPreuzimanja(userId);
+        console.log('[DEBUG] podaciResult:', podaciResult);
 
         if (!podaciResult.success || !podaciResult.data) {
           toast.error(t('no_data_redirect') || "Nemate unete podatke za preuzimanje. Bićete preusmereni na stranicu za unos podataka.", { duration: 5000 });
@@ -110,30 +114,34 @@ export default function KorpaActions({ userId, stavke, onUpdate }: KorpaActionsP
 
         // Create order
         const success = await potvrdiPorudzbinu();
+        console.log('[DEBUG] potvrdiPorudzbinu success:', success);
         if (success) {
-          // Pokušaj da pošalješ email potvrdu korisniku
+          // Pošalji email potvrdu korisniku koristeći podatke iz session.user
           try {
-            // Pretpostavljamo da korisnik ima podatke u localStorage-u ili iz session-a
-            const userEmail = localStorage.getItem('userEmail');
-            const userIme = localStorage.getItem('userIme');
-            const userPrezime = localStorage.getItem('userPrezime');
-            if (userEmail) {
-              await fetch('/api/proizvodi/email/posalji', {
+            const user = session?.user;
+            console.log('[DEBUG] session.user:', user);
+            if (user?.email) {
+              const ime = (user as any).ime || (user as any).name?.split(' ')[0] || '';
+              const prezime = (user as any).prezime || (user as any).name?.split(' ')[1] || '';
+              console.log('[EMAIL DEBUG] Šaljem email potvrdu:', { email: user.email, ime, prezime });
+              const emailRes = await fetch('/api/proizvodi/email/posalji', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                  email: userEmail,
+                  email: user.email,
                   subject: '✅ Vaša porudžbina je uspešno kreirana!',
                   html: `
                     <h2>✅ Vaša porudžbina je uspešno kreirana!</h2>
-                    <p><b>Ime:</b> ${userIme || ''}</p>
-                    <p><b>Prezime:</b> ${userPrezime || ''}</p>
-                    <p><b>Email:</b> ${userEmail}</p>
+                    <p><b>Ime:</b> ${ime}</p>
+                    <p><b>Prezime:</b> ${prezime}</p>
+                    <p><b>Email:</b> ${user.email}</p>
                   `
                 })
               });
+              console.log('[EMAIL DEBUG] Odgovor sa servera:', emailRes.status, await emailRes.text());
             }
           } catch (err) {
+            console.error('[EMAIL DEBUG] Greška pri slanju email potvrde:', err);
             toast.error('Greška pri slanju email potvrde.');
           }
           toast.success('Potvrda porudžbine je poslata na email!', { duration: 4000 });
@@ -146,7 +154,11 @@ export default function KorpaActions({ userId, stavke, onUpdate }: KorpaActionsP
     });
   };
 
-  if (!stavke.length) return null;
+  console.log('[DEBUG] KorpaActions render, stavke:', stavke);
+  if (!stavke.length) {
+    console.log('[DEBUG] KorpaActions: nema stavki u korpi, dugme se ne prikazuje');
+    return null;
+  }
 
   return (
     <div className="space-y-4">
@@ -174,7 +186,10 @@ export default function KorpaActions({ userId, stavke, onUpdate }: KorpaActionsP
         </button>
 
         <button
-          onClick={handleZavrsiKupovinu}
+          onClick={() => {
+            console.log('[DEBUG] Dugme Završi kupovinu kliknuto');
+            handleZavrsiKupovinu();
+          }}
           disabled={isPending}
           className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
