@@ -8,7 +8,7 @@ import { FaCartPlus, FaArrowLeft } from 'react-icons/fa';
 import Link from 'next/link';
 import Image from 'next/image';
 import { dodajUKorpu, getKorpa } from '@actions/korpa';
-import OmiljeniButton from '../../components/OmiljeniButton';
+import OmiljeniButton from '../components/OmiljeniButton';
 
 export default function ProizvodClient({ proizvod, lang }: { proizvod: any, lang: string }) {
   const router = useRouter();
